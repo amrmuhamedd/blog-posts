@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
-import { generateAuthToken } from "../utils/auth";
+import { comparePasswords, generateAuthToken } from "../utils/auth";
 
 const prisma = new PrismaClient();
 
@@ -42,5 +42,36 @@ export const registerUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error during registration:", error);
     return res.status(500).json({ error: "Registration failed" });
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ error: "username or password is incorrect" });
+    }
+
+    const passwordMatch = await comparePasswords(password, user.password);
+
+    if (!passwordMatch) {
+      return res
+        .status(401)
+        .json({ error: "username or password is incorrect" });
+    }
+
+    const token = await generateAuthToken(user);
+
+    return res.status(200).json({ token });
+  } catch (error) {
+    console.error("Error during login:", error);
+    return res.status(500).json({ error: "something went wrong" });
   }
 };
