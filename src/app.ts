@@ -4,15 +4,9 @@ import postRoutes from "./routes/postRoutes";
 import swaggerUi from "swagger-ui-express";
 import cors from "cors";
 import { specs } from "./swaggerConfig";
-require("dotenv").config();
+import dotenv from "dotenv";
 
-declare global {
-  namespace Express {
-    export interface Request {
-      user?: { id: number; name: string; email: string };
-    }
-  }
-}
+dotenv.config();
 
 const app = express();
 app.use(cors());

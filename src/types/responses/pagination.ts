@@ -1,4 +1,3 @@
-import { Response } from "express";
 import { BasResponse } from "./baseResponse";
 
 export interface pagination<T> {

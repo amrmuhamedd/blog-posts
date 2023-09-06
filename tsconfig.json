@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["express", "node"],
     "target": "es2017",
     "module": "commonjs",
     "resolveJsonModule": true,
@@ -13,5 +14,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
+  "files": ["./src/express.d.ts"],
   "include": ["src/**/*.ts"]
 }

@@ -1,6 +1,6 @@
 import { NextFunction, Response } from "express";
 import { validationResult } from "express-validator";
-
+// eslint-disable-next-line
 const { body } = require("express-validator");
 
 export const updatePostDto = [
