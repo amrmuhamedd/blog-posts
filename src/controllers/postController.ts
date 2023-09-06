@@ -1,11 +1,17 @@
-// postController.ts
-
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { PaginationResponse, pagination } from "../types/responses/pagination";
+import { IPost } from "../types/post";
+import { IUser } from "../types/user";
+import { BasResponse } from "../types/responses/baseResponse";
+import { DeleteResponse } from "../types/responses/deletResponse";
 
 const prisma = new PrismaClient();
 
-export const createPost = async (req: Request, res: Response) => {
+export const createPost = async (
+  req: Request,
+  res: Response
+): BasResponse<IPost> => {
   const { title, content } = req.body;
 
   try {
@@ -26,7 +32,10 @@ export const createPost = async (req: Request, res: Response) => {
   }
 };
 
-export const ListPosts = async (req: Request, res: Response) => {
+export const ListPosts = async (
+  req: Request,
+  res: Response
+): PaginationResponse<IUser> => {
   const { page = 1, pageSize = 10 } = req.query;
 
   try {
@@ -53,8 +62,8 @@ export const ListPosts = async (req: Request, res: Response) => {
     const nextPage = Number(page) < totalPages ? Number(page) + 1 : null;
     const prevPage = Number(page) > 1 ? Number(page) - 1 : null;
 
-    const response = {
-      currentPage: page,
+    const response: pagination<IPost> = {
+      currentPage: Number(page),
       nextPage,
       prevPage,
       totalPages,
@@ -69,7 +78,10 @@ export const ListPosts = async (req: Request, res: Response) => {
   }
 };
 
-export const updatePost = async (req: Request, res: Response) => {
+export const updatePost = async (
+  req: Request,
+  res: Response
+): BasResponse<IPost> => {
   const { postId } = req.params;
   const { title, content } = req.body;
   const user = req?.user;
@@ -100,7 +112,10 @@ export const updatePost = async (req: Request, res: Response) => {
   }
 };
 
-export const deletePost = async (req: Request, res: Response) => {
+export const deletePost = async (
+  req: Request,
+  res: Response
+): DeleteResponse => {
   const { postId } = req.params;
 
   try {

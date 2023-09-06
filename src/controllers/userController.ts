@@ -3,10 +3,15 @@ import { validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
 import { comparePasswords, generateAuthToken } from "../utils/auth";
+import { BasResponse } from "../types/responses/baseResponse";
+import { IUser } from "../types/user";
 
 const prisma = new PrismaClient();
 
-export const registerUser = async (req: Request, res: Response) => {
+export const registerUser = async (
+  req: Request,
+  res: Response
+): BasResponse<{ user: IUser; token: string }> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -37,6 +42,7 @@ export const registerUser = async (req: Request, res: Response) => {
         email: true,
       },
     });
+
     const token = await generateAuthToken(user);
     return res.status(201).json({ user, token });
   } catch (error) {
@@ -44,7 +50,10 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (
+  req: Request,
+  res: Response
+): BasResponse<{ token: string }> => {
   const { email, password } = req.body;
 
   try {
