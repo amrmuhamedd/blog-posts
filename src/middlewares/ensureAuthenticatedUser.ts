@@ -37,7 +37,7 @@ export const ensureAuthenticatedActor = (
       error: {
         type: err.type,
         message: err.message,
-        statusCode: 401,
+        statusCode: 404,
       },
     });
     return;

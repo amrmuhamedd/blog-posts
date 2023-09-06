@@ -14,9 +14,9 @@ export async function comparePasswords(
 
 export const verifyAndDecodeToken = (token: string) => {
   let decodedPayload;
-  if (!process.env.JWT_SIGNING_SECRET) throw InternalError;
+  if (!secretKey) throw InternalError;
   try {
-    decodedPayload = jwt.verify(token, process.env.JWT_SIGNING_SECRET);
+    decodedPayload = jwt.verify(token, secretKey);
   } catch (e) {
     const err = e as JsonWebTokenError;
     if (err.name === "JsonWebTokenError") {
