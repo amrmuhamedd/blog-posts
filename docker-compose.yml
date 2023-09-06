@@ -1,0 +1,32 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://postgres:blog123456789@db:5432/blogs
+      SECRET_KEY: FCE806EC7FB3D6668B6621629293C317022A5A19035C07E8B516F5A92AB4A4C0
+    depends_on:
+      - db
+    command:
+      - sh
+      - -c
+      - |
+        yarn migrate && yarn dev
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: blog123456789
+      POSTGRES_DB: blogs
+    ports:
+      - "6666:5432"

@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon src/app.ts",
-    "migrate": "npx prisma migrate dev"
+    "migrate": "npx prisma migrate dev",
+    "build": "tsc",
+    "start": "node ./dist/src/app.js"
   },
   "dependencies": {
     "@prisma/client": "^5.2.0",
