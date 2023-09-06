@@ -70,3 +70,35 @@ export const ListPosts = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to list posts" });
   }
 };
+
+export const updatePost = async (req: Request, res: Response) => {
+  const { postId } = req.params;
+  const { title, content } = req.body;
+  const user = req?.user;
+
+  try {
+    const post = await prisma.post.findUnique({
+      where: { id: parseInt(postId) },
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (post.userId !== user?.id) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to edit this post" });
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id: parseInt(postId) },
+      data: { title, content },
+    });
+
+    return res.status(200).json({ updatedPost });
+  } catch (error) {
+    console.error("Error editing post:", error);
+    return res.status(500).json({ error: "Failed to edit post" });
+  }
+};
