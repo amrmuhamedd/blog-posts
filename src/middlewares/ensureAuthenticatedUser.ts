@@ -2,7 +2,7 @@ import InvalidToken from "../errors/InvalidToken";
 import { Request, Response, NextFunction } from "express";
 import { verifyAndDecodeToken } from "../utils/auth";
 
-export const ensureAuthenticatedActor = (
+export const ensureAuthenticatedUser = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -44,4 +44,4 @@ export const ensureAuthenticatedActor = (
   }
 };
 
-export default ensureAuthenticatedActor;
+export default ensureAuthenticatedUser;
