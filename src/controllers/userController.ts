@@ -67,7 +67,11 @@ export const loginUser = async (req: Request, res: Response) => {
         .json({ error: "username or password is incorrect" });
     }
 
-    const token = await generateAuthToken(user);
+    const token = await generateAuthToken({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    });
 
     return res.status(200).json({ token });
   } catch (error) {
