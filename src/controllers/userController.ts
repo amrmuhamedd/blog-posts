@@ -40,7 +40,6 @@ export const registerUser = async (req: Request, res: Response) => {
     const token = await generateAuthToken(user);
     return res.status(201).json({ user, token });
   } catch (error) {
-    console.error("Error during registration:", error);
     return res.status(500).json({ error: "Registration failed" });
   }
 };
@@ -75,7 +74,6 @@ export const loginUser = async (req: Request, res: Response) => {
 
     return res.status(200).json({ token });
   } catch (error) {
-    console.error("Error during login:", error);
     return res.status(500).json({ error: "something went wrong" });
   }
 };

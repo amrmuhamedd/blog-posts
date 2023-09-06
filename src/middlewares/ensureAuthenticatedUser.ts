@@ -37,7 +37,7 @@ export const ensureAuthenticatedUser = (
       error: {
         type: err.type,
         message: err.message,
-        statusCode: 404,
+        statusCode: 401,
       },
     });
     return;

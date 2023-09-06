@@ -96,7 +96,6 @@ export const updatePost = async (req: Request, res: Response) => {
 
     return res.status(200).json({ updatedPost });
   } catch (error) {
-    console.error("Error editing post:", error);
     return res.status(500).json({ error: "Failed to edit post" });
   }
 };
@@ -125,7 +124,6 @@ export const deletePost = async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: "post deleted successfully" });
   } catch (error) {
-    console.error("Error deleting post:", error);
     return res.status(500).json({ error: "Failed to delete post" });
   }
 };

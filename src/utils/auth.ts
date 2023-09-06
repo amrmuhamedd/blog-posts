@@ -14,7 +14,7 @@ export async function comparePasswords(
 
 export const verifyAndDecodeToken = (token: string) => {
   let decodedPayload;
-  if (!secretKey) throw InternalError;
+  if (!secretKey) throw new InternalError("Unauthorized");
   try {
     decodedPayload = jwt.verify(token, secretKey);
   } catch (e) {
@@ -27,7 +27,7 @@ export const verifyAndDecodeToken = (token: string) => {
       throw new InvalidToken("expired token");
     }
 
-    throw InternalError;
+    throw new InternalError("Unauthorized");
   }
   return decodedPayload;
 };
