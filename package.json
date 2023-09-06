@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nodemon src/app.ts",
     "migrate": "npx prisma migrate dev",
+    "migrate:prod": "npx prisma migrate deploy",
     "build": "tsc",
     "start": "node ./dist/src/app.js",
     "lint": "npx eslint ./src"
