@@ -100,3 +100,32 @@ export const updatePost = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to edit post" });
   }
 };
+
+export const deletePost = async (req: Request, res: Response) => {
+  const { postId } = req.params;
+
+  try {
+    const post = await prisma.post.findUnique({
+      where: { id: parseInt(postId) },
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    if (post.userId !== req?.user?.id) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to delete this post" });
+    }
+
+    await prisma.post.delete({
+      where: { id: parseInt(postId) },
+    });
+
+    return res.status(200).json({ message: "post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    return res.status(500).json({ error: "Failed to delete post" });
+  }
+};
