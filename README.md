@@ -82,9 +82,7 @@ Now you can see your API docs at: `http://localhost:3000/api-docs/#/`
 
 ## live preview 
 
-you can see the live preview [here](https://blog-post-ppzc.onrender.com/api-docs/#/)
-
-### Note: this is free host so it may take some time to launch instance
+you can see the live preview [here](https://blog-post-ppzc.onrender.com/api-docs/#/) . Please note that the initial launch of the documentation may be a bit slow as it is hosted on a free hosting plan.
 ## At the end 
 Please refer to the Swagger documentation for detailed information on each endpoint and how to use them.
 
