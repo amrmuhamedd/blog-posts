@@ -4,6 +4,9 @@
 
 Welcome to the Blog REST API documentation. This API allows users to register, log in, create posts, list posts, edit user-related posts, and delete user-related posts. It provides basic functionality for managing a blog.
 
+![image](https://github.com/amrmuhamedd/blog-posts/assets/47860740/f51832fb-c1ef-430f-8858-8a01a82b8df6)
+
+
 ## Tech Stack
 
 The Blog REST API is built using the following technologies:
