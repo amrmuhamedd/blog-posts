@@ -15,32 +15,32 @@ export const createPost = async (
   res: Response
 ): BasResponse<IPost> => {
   try {
-    const postDto = plainToClass(CreatePostDto, req.body);
-    const errors = await validate(postDto);
-    
-    if (errors.length > 0) {
-      return res.status(400).json({ 
-        error: "Validation failed", 
-        details: errors.map(error => ({
-          property: error.property,
-          constraints: error.constraints
-        }))
-      });
-    }
-
-    const userId = req.user?.id as number;
-
-    const newPost = await prisma.post.create({
+    const data = req.body as CreatePostDto;
+    const post = await prisma.post.create({
       data: {
-        title: postDto.title,
-        content: postDto.content,
-        status: postDto.status || PostStatus.Draft,
-        publish_at: postDto.publish_at,
-        userId,
+        title: data.title,
+        content: data.content,
+        userId: req.user!.id,
+        status: data.status,
+        publish_at: data.publish_at,
+        ...(data.tags && {
+          tags: {
+            connect: data.tags.map(tagId => ({ id: tagId }))
+          }
+        })
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        tags: true
+      }
     });
-
-    return res.status(201).json({ newPost });
+    return res.status(201).json({ data: post });
   } catch (error) {
     console.error("Error creating post:", error);
     return res.status(500).json({ error: "Post creation failed" });
@@ -52,7 +52,7 @@ export const ListPosts = async (
   res: Response
 ): PaginationResponse<IPost> => {
   try {
-    const { page = 1, pageSize = 10, status } = req.query;
+    const { page = 1, pageSize = 10, status, tag } = req.query;
     const skip = (Number(page) - 1) * Number(pageSize);
 
     // Type guard and conversion for status
@@ -63,6 +63,13 @@ export const ListPosts = async (
 
     const where: Prisma.PostWhereInput = {
       ...(validStatus && { status: validStatus }),
+      ...(tag && {
+        tags: {
+          some: {
+            id: Number(tag)
+          }
+        }
+      }),
       OR: validStatus ? [
         { status: validStatus, publish_at: null },
         { status: validStatus, publish_at: { lte: new Date() } }
@@ -81,7 +88,8 @@ export const ListPosts = async (
               name: true,
               email: true
             }
-          }
+          },
+          tags: true
         },
         orderBy: {
           created_at: 'desc'
@@ -90,7 +98,14 @@ export const ListPosts = async (
       prisma.post.count({ where })
     ]);
 
-    return res.status(200).json(createPagination({ page: Number(page), pageSize: Number(pageSize), total, data: posts }));
+    return res.status(200).json({
+      data: createPagination({
+        data: posts,
+        page: Number(page),
+        pageSize: Number(pageSize),
+        total
+      })
+    });
   } catch (error) {
     console.error("Error listing posts:", error);
     return res.status(500).json({ error: "Failed to retrieve posts" });

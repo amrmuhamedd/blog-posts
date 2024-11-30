@@ -40,6 +40,13 @@ model Post {
   publish_at DateTime?
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
+  tags       Tag[]      @relation("PostTags")
 
   @@index([userId])
+}
+
+model Tag {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique @db.VarChar(50)
+  posts Post[]  @relation("PostTags")
 }

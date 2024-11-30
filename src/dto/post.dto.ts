@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate, IsArray, IsNumber } from 'class-validator';
 import { PostStatus } from '@prisma/client';
 
 export class CreatePostDto {
@@ -21,6 +21,11 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  tags?: number[];
 }
 
 export class UpdatePostDto {
@@ -43,4 +48,9 @@ export class UpdatePostDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  tags?: number[];
 }
