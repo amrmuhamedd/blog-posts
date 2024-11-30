@@ -13,23 +13,25 @@ export async function comparePasswords(
 }
 
 export const verifyAndDecodeToken = (token: string) => {
-  let decodedPayload;
-  if (!secretKey) throw new InternalError("Unauthorized");
-  try {
-    decodedPayload = jwt.verify(token, secretKey);
-  } catch (e) {
-    const err = e as JsonWebTokenError;
-    if (err.name === "JsonWebTokenError") {
-      throw new InvalidToken();
-    }
-
-    if (err.name === "TokenExpiredError") {
-      throw new InvalidToken("expired token");
-    }
-
+  if (!secretKey) {
     throw new InternalError("Unauthorized");
   }
-  return decodedPayload;
+
+  try {
+    const decodedToken = jwt.verify(token, secretKey);
+    return decodedToken;
+  } catch (error) {
+    const jwtError = error as JsonWebTokenError;
+
+    switch (jwtError.name) {
+      case "JsonWebTokenError":
+        throw new InvalidToken();
+      case "TokenExpiredError":
+        throw new InvalidToken("expired token");
+      default:
+        throw new InternalError("Unauthorized");
+    }
+  }
 };
 
 export function generateAuthToken(payload: {
@@ -38,6 +40,6 @@ export function generateAuthToken(payload: {
   name: string;
 }): string {
   return jwt.sign(payload, secretKey, {
-    expiresIn: "1h",
+    expiresIn: "1d",
   });
 }

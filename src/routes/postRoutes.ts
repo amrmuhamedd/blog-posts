@@ -5,11 +5,11 @@ import {
   deletePost,
   updatePost,
 } from "../controllers/postController";
-import { createPostDto } from "../validation/createpost.dto";
+import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import ensureAuthenticatedUser from "../middlewares/ensureAuthenticatedUser";
-import { updatePostDto } from "../validation/updatepost.dto";
 
 const router = express.Router();
+
 /**
  * @swagger
  * tags:
@@ -42,6 +42,7 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.get("/", ListPosts);
+
 /**
  * @swagger
  * /api/posts/create:
@@ -72,7 +73,8 @@ router.get("/", ListPosts);
  *       '500':
  *         description: Internal server error
  */
-router.post("/create", createPostDto, ensureAuthenticatedUser, createPost);
+router.post("/create", ensureAuthenticatedUser, createPost);
+
 /**
  * @swagger
  * /api/posts/edit/{postId}:
@@ -115,7 +117,7 @@ router.post("/create", createPostDto, ensureAuthenticatedUser, createPost);
  *         description: Internal server error
  */
 
-router.put("/edit/:postId", updatePostDto, ensureAuthenticatedUser, updatePost);
+router.put("/edit/:postId", ensureAuthenticatedUser, updatePost);
 
 /**
  * @swagger

@@ -1,7 +1,7 @@
 import express from "express";
-import { registrationDto } from "../validation/register.dto";
 import { loginUser, registerUser } from "../controllers/userController";
-import { loginDto } from "../validation/login.dto";
+import { CreateCustomerInput, LoginDto } from "../dto/user.dto";
+import { upload } from "../middleware/multer";
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -31,10 +31,23 @@ const router = express.Router();
  *                 example: Amr Mohamed
  *               email:
  *                 type: string
- *                 example: amr@example.com
+ *                 example: user@example.com
  *               password:
  *                 type: string
  *                 example: password123
+ *               phone:
+ *                 type: string
+ *                 example: "1234567890"
+ *               role:
+ *                 type: string
+ *                 enum: [USER, ADMIN]
+ *                 example: USER
+ *               profile_picture:
+ *                 type: string
+ *                 format: binary
+ *               bio:
+ *                 type: string
+ *                 example: A short bio about me
  *     responses:
  *       '201':
  *         description: User registered successfully
@@ -43,7 +56,7 @@ const router = express.Router();
  *       '500':
  *         description: Internal server error
  */
-router.post("/register", registrationDto, registerUser);
+router.post("/register", upload.single('profile_picture'), registerUser);
 
 /**
  * @swagger
@@ -81,6 +94,6 @@ router.post("/register", registrationDto, registerUser);
  *       '500':
  *         description: Internal server error
  */
-router.post("/login", loginDto, loginUser);
+router.post("/login", loginUser);
 
 export default router;

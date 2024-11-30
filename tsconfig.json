@@ -8,12 +8,13 @@
     "sourceMap": true,
     "outDir": "./dist",
     "esModuleInterop": true,
+    "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "files": ["./src/express.d.ts"],
+  "files": ["./src/types/express.d.ts"],
   "include": ["src/**/*.ts"]
 }
