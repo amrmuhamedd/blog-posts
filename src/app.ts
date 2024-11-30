@@ -9,7 +9,7 @@ import { swaggerConfig } from './core/config/swagger.config';
 // Routes
 import userRoutes from './modules/users/user.routes';
 import postRoutes from './modules/posts/post.routes';
-import tagRoutes from './modules/tags/tag.routes';
+import { tagRoutes } from './modules/tags/tag.routes';
 
 class App {
   public app: express.Application;
