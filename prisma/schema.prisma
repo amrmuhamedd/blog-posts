@@ -19,15 +19,27 @@ model User {
   posts    Post[]
 }
 
-model Post {
-  id      Int    @id @default(autoincrement())
-  title   String
-  content String
-  userId  Int
-  user    User   @relation(fields: [userId], references: [id])
-}
-
 enum Role {
   ADMIN
   USER
+}
+
+enum PostStatus {
+  Draft
+  Published
+  Scheduled
+}
+
+model Post {
+  id         Int        @id @default(autoincrement())
+  title      String     @db.VarChar(255)
+  content    String     @db.Text
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id])
+  status     PostStatus @default(Draft)
+  publish_at DateTime?
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  @@index([userId])
 }
