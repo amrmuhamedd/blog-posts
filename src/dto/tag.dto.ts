@@ -1,15 +1,21 @@
-import { IsString, IsNotEmpty, Length } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional } from "class-validator";
 
 export class CreateTagDto {
-  @IsString()
   @IsNotEmpty()
-  @Length(1, 50)
+  @IsString()
   name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 export class UpdateTagDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @Length(1, 50)
-  name: string;
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

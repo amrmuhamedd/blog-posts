@@ -40,13 +40,27 @@ model Post {
   publish_at DateTime?
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
-  tags       Tag[]      @relation("PostTags")
-
+  tags       PostTag[]
   @@index([userId])
 }
 
 model Tag {
-  id    Int     @id @default(autoincrement())
-  name  String  @unique @db.VarChar(50)
-  posts Post[]  @relation("PostTags")
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50)
+  description String?   @db.Text
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  posts       PostTag[]
+}
+
+model PostTag {
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId     Int
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId      Int
+  created_at DateTime @default(now())
+
+  @@id([postId, tagId])
+  @@index([tagId])
+  @@index([postId])
 }
