@@ -1,31 +1,46 @@
-import { IsString, IsNotEmpty, IsOptional, Length } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsDate } from 'class-validator';
+import { PostStatus } from '@prisma/client';
 
 export class CreatePostDto {
-    @IsString()
-    @IsNotEmpty({ message: "You must enter a title for post" })
-    @Length(1, 100)
-    title: string;
+  @IsString()
+  @IsNotEmpty()
+  title: string;
 
-    @IsString()
-    @IsNotEmpty({ message: "You must enter content" })
-    content: string;
+  @IsString()
+  @IsNotEmpty()
+  content: string;
 
-    @IsOptional()
-    @IsString()
-    image?: string;
+  @IsEnum(PostStatus)
+  @IsOptional()
+  status?: PostStatus;
+
+  @IsDate()
+  @IsOptional()
+  publish_at?: Date;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
 
 export class UpdatePostDto {
-    @IsOptional()
-    @IsString()
-    @Length(1, 100)
-    title?: string;
+  @IsString()
+  @IsOptional()
+  title?: string;
 
-    @IsOptional()
-    @IsString()
-    content?: string;
+  @IsString()
+  @IsOptional()
+  content?: string;
 
-    @IsOptional()
-    @IsString()
-    image?: string;
+  @IsEnum(PostStatus)
+  @IsOptional()
+  status?: PostStatus;
+
+  @IsDate()
+  @IsOptional()
+  publish_at?: Date;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 }
