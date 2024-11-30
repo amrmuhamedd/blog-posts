@@ -5,7 +5,6 @@ import {
   deletePost,
   updatePost,
 } from "../controllers/postController";
-import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import ensureAuthenticatedUser from "../middlewares/ensureAuthenticatedUser";
 
 const router = express.Router();

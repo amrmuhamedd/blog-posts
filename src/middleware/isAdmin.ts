@@ -1,5 +1,4 @@
-import { Response, NextFunction } from 'express';
-import { Request } from '../types/express';
+import { Request, Response, NextFunction } from 'express';
 
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   // Check if user exists and has admin role

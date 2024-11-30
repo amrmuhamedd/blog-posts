@@ -1,6 +1,5 @@
 import express from "express";
 import { loginUser, registerUser } from "../controllers/userController";
-import { CreateCustomerInput, LoginDto } from "../dto/user.dto";
 import { upload } from "../middleware/multer";
 
 const router = express.Router();
@@ -56,7 +55,7 @@ const router = express.Router();
  *       '500':
  *         description: Internal server error
  */
-router.post("/register", upload.single('profile_picture'), registerUser);
+router.post("/register", upload.single('file') as any, registerUser);
 
 /**
  * @swagger

@@ -17,9 +17,6 @@ export const createTag = async (
     });
     return res.status(201).json({ data: tag });
   } catch (error) {
-    if (error.code === 'P2002') {
-      return res.status(400).json({ error: "Tag name already exists" });
-    }
     console.error("Error creating tag:", error);
     return res.status(500).json({ error: "Failed to create tag" });
   }
@@ -92,9 +89,6 @@ export const updateTag = async (
 
     return res.status(200).json({ data: tag });
   } catch (error) {
-    if (error.code === 'P2002') {
-      return res.status(400).json({ error: "Tag name already exists" });
-    }
     console.error("Error updating tag:", error);
     return res.status(500).json({ error: "Failed to update tag" });
   }
