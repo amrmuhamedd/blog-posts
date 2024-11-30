@@ -48,7 +48,8 @@ export class PostService {
               email: true
             }
           },
-          tags: true
+          tags: true,
+          category: true
         },
         orderBy: { created_at: 'desc' }
       }),
@@ -76,7 +77,8 @@ export class PostService {
             email: true
           }
         },
-        tags: true
+        tags: true,
+        category: true
       }
     });
 
@@ -94,6 +96,16 @@ export class PostService {
   }
 
   async createPost(userId: number, createPostDto: CreatePostDto) {
+    if (createPostDto.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: createPostDto.categoryId }
+      });
+
+      if (!category) {
+        throw new NotFoundError('Category not found');
+      }
+    }
+
     if (createPostDto.tags) {
       const existingTags = await prisma.tag.findMany({
         where: { id: { in: createPostDto.tags } }
@@ -115,6 +127,7 @@ export class PostService {
         title: createPostDto.title,
         content: createPostDto.content,
         userId,
+        categoryId: createPostDto.categoryId,
         status: createPostDto.status,
         publish_at: createPostDto.publish_at,
         tags: createPostDto.tags ? {
@@ -133,7 +146,12 @@ export class PostService {
             email: true
           }
         },
-        tags: true
+        category: true,
+        tags: {
+          include: {
+            tag: true
+          }
+        }
       }
     });
   }
@@ -149,6 +167,16 @@ export class PostService {
 
     if (post.userId !== userId) {
       throw new ForbiddenError('Not authorized to update this post');
+    }
+
+    if (updatePostDto.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: updatePostDto.categoryId }
+      });
+
+      if (!category) {
+        throw new NotFoundError('Category not found');
+      }
     }
 
     if (updatePostDto.tags) {
@@ -174,6 +202,7 @@ export class PostService {
         ...(updatePostDto.content && { content: updatePostDto.content }),
         ...(updatePostDto.status && { status: updatePostDto.status }),
         ...(updatePostDto.publish_at && { publish_at: updatePostDto.publish_at }),
+        ...(updatePostDto.categoryId !== undefined && { categoryId: updatePostDto.categoryId }),
         ...(updatePostDto.tags && {
           tags: {
             deleteMany: {},
@@ -193,7 +222,12 @@ export class PostService {
             email: true
           }
         },
-        tags: true
+        category: true,
+        tags: {
+          include: {
+            tag: true
+          }
+        }
       }
     });
   }

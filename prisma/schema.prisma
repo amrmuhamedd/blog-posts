@@ -30,18 +30,30 @@ enum PostStatus {
   Scheduled
 }
 
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  posts       Post[]
+}
+
 model Post {
   id         Int        @id @default(autoincrement())
   title      String     @db.VarChar(255)
   content    String     @db.Text
   userId     Int
+  categoryId Int?
   user       User       @relation(fields: [userId], references: [id])
+  category   Category?  @relation(fields: [categoryId], references: [id])
   status     PostStatus @default(Draft)
   publish_at DateTime?
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
   tags       PostTag[]
+
   @@index([userId])
+  @@index([categoryId])
 }
 
 model Tag {
