@@ -48,8 +48,12 @@ export class PostService {
               email: true
             }
           },
-          tags: true,
-          category: true
+          categories: {
+            include: {
+              category: true
+            }
+          },
+          tags: true
         },
         orderBy: { created_at: 'desc' }
       }),
@@ -77,8 +81,12 @@ export class PostService {
             email: true
           }
         },
-        tags: true,
-        category: true
+        categories: {
+          include: {
+            category: true
+          }
+        },
+        tags: true
       }
     });
 
@@ -95,58 +103,34 @@ export class PostService {
     return post;
   }
 
-  async createPost(userId: number, createPostDto: CreatePostDto) {
-    if (createPostDto.categoryId) {
-      const category = await prisma.category.findUnique({
-        where: { id: createPostDto.categoryId }
-      });
-
-      if (!category) {
-        throw new NotFoundError('Category not found');
-      }
-    }
-
-    if (createPostDto.tags) {
-      const existingTags = await prisma.tag.findMany({
-        where: { id: { in: createPostDto.tags } }
-      });
-
-      if (existingTags.length !== createPostDto.tags.length) {
-        throw new NotFoundError('One or more tags not found');
-      }
-    }
-
-    if (createPostDto.status === PostStatus.Published && createPostDto.publish_at) {
-      if (createPostDto.publish_at < new Date()) {
-        throw new Error('Publish date cannot be in the past');
-      }
-    }
+  async createPost(userId: number, data: CreatePostDto) {
+    const { tags = [], categories = [], ...postData } = data;
 
     return prisma.post.create({
       data: {
-        title: createPostDto.title,
-        content: createPostDto.content,
+        ...postData,
         userId,
-        categoryId: createPostDto.categoryId,
-        status: createPostDto.status,
-        publish_at: createPostDto.publish_at,
-        tags: createPostDto.tags ? {
-          create: createPostDto.tags.map(tagId => ({
+        categories: {
+          create: categories.map(categoryId => ({
+            category: {
+              connect: { id: categoryId }
+            }
+          }))
+        },
+        tags: {
+          create: tags.map(tagId => ({
             tag: {
               connect: { id: tagId }
             }
           }))
-        } : undefined
+        }
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+        categories: {
+          include: {
+            category: true
           }
         },
-        category: true,
         tags: {
           include: {
             tag: true
@@ -156,64 +140,40 @@ export class PostService {
     });
   }
 
-  async updatePost(postId: number, userId: number, updatePostDto: UpdatePostDto) {
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
-    }
+  async updatePost(postId: number, userId: number, data: UpdatePostDto) {
+    const post = await this.getPost(postId);
 
     if (post.userId !== userId) {
-      throw new ForbiddenError('Not authorized to update this post');
+      throw new ForbiddenError('You are not authorized to update this post');
     }
 
-    if (updatePostDto.categoryId) {
-      const category = await prisma.category.findUnique({
-        where: { id: updatePostDto.categoryId }
-      });
+    const { tags, categories, ...updateData } = data;
 
-      if (!category) {
-        throw new NotFoundError('Category not found');
-      }
+    const updateOperations: Prisma.PostUpdateInput = {
+      ...updateData
+    };
+
+    if (tags !== undefined) {
+      updateOperations.tags = {
+        deleteMany: {},
+        create: tags.map(tagId => ({
+          tag: { connect: { id: tagId } }
+        }))
+      };
     }
 
-    if (updatePostDto.tags) {
-      const existingTags = await prisma.tag.findMany({
-        where: { id: { in: updatePostDto.tags } }
-      });
-
-      if (existingTags.length !== updatePostDto.tags.length) {
-        throw new NotFoundError('One or more tags not found');
-      }
-    }
-
-    if (updatePostDto.status === PostStatus.Published && updatePostDto.publish_at) {
-      if (updatePostDto.publish_at < new Date()) {
-        throw new Error('Publish date cannot be in the past');
-      }
+    if (categories !== undefined) {
+      updateOperations.categories = {
+        deleteMany: {},
+        create: categories.map(categoryId => ({
+          category: { connect: { id: categoryId } }
+        }))
+      };
     }
 
     return prisma.post.update({
       where: { id: postId },
-      data: {
-        ...(updatePostDto.title && { title: updatePostDto.title }),
-        ...(updatePostDto.content && { content: updatePostDto.content }),
-        ...(updatePostDto.status && { status: updatePostDto.status }),
-        ...(updatePostDto.publish_at && { publish_at: updatePostDto.publish_at }),
-        ...(updatePostDto.categoryId !== undefined && { categoryId: updatePostDto.categoryId }),
-        ...(updatePostDto.tags && {
-          tags: {
-            deleteMany: {},
-            create: updatePostDto.tags.map(tagId => ({
-              tag: {
-                connect: { id: tagId }
-              }
-            }))
-          }
-        })
-      },
+      data: updateOperations,
       include: {
         user: {
           select: {
@@ -222,7 +182,11 @@ export class PostService {
             email: true
           }
         },
-        category: true,
+        categories: {
+          include: {
+            category: true
+          }
+        },
         tags: {
           include: {
             tag: true
