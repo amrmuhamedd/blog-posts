@@ -1,24 +1,67 @@
-require('dotenv').config();
-import express from "express";
-import userRoutes from "./routes/userRoutes";
-import postRoutes from "./routes/postRoutes";
-import tagRoutes from './routes/tagRoutes';
-import swaggerUi from "swagger-ui-express";
-import cors from "cors";
-import { specs } from "./swaggerConfig";
+import express from 'express';
+import 'reflect-metadata';
+import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import { config } from './core/config/config.service';
+import { errorMiddleware } from './core/middleware/error.middleware';
+import { swaggerConfig } from './core/config/swagger.config';
 
-const app = express();
-app.use(cors());
+// Routes
+import userRoutes from './modules/users/user.routes';
+import postRoutes from './modules/posts/post.routes';
+import tagRoutes from './modules/tags/tag.routes';
 
-app.use(express.json());
+class App {
+  public app: express.Application;
+  private readonly apiPrefix: string;
 
-app.use("/api-docs", swaggerUi.serve as any, swaggerUi.setup(specs) as any);
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoutes);
-app.use('/api/tags', tagRoutes);
+  constructor() {
+    this.app = express();
+    this.apiPrefix = config.get('API_PREFIX') || '/api';
+    this.initializeMiddleware();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+  }
 
-const port = process.env.PORT || 3000;
+  private initializeMiddleware(): void {
+    // Security middleware
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+    // API Documentation
+    this.app.use(
+      '/api-docs',
+      swaggerUi.serve as any,
+      swaggerUi.setup(swaggerConfig) as any
+    );
+  }
+
+  private initializeRoutes(): void {
+    this.app.use(`${this.apiPrefix}/users`, userRoutes);
+    this.app.use(`${this.apiPrefix}/posts`, postRoutes);
+    this.app.use(`${this.apiPrefix}/tags`, tagRoutes);
+
+    // Health check endpoint
+    this.app.get('/health', (_, res) => {
+      res.status(200).json({ status: 'ok' });
+    });
+  }
+
+  private initializeErrorHandling(): void {
+    this.app.use(errorMiddleware);
+  }
+
+  public listen(): void {
+    const port = config.get('PORT') || 3000;
+    const env = config.get('NODE_ENV') || 'development';
+
+    this.app.listen(port, () => {
+      console.log(`🚀 Server is running on port ${port} in ${env} mode`);
+      console.log(`📚 API Documentation available at http://localhost:${port}/api-docs`);
+    });
+  }
+}
+
+const app = new App();
+app.listen();
