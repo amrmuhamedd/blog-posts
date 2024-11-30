@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-import { PaginationResponse, pagination } from "../types/responses/pagination";
+import { PrismaClient, PostStatus, Prisma } from "@prisma/client";
+import { PaginationResponse, createPagination } from "../types/responses/pagination";
 import { IPost } from "../types/post";
-import { IUser } from "../types/user";
 import { BasResponse } from "../types/responses/baseResponse";
 import { DeleteResponse } from "../types/responses/deletResponse";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
@@ -33,7 +32,10 @@ export const createPost = async (
 
     const newPost = await prisma.post.create({
       data: {
-        ...postDto,
+        title: postDto.title,
+        content: postDto.content,
+        status: postDto.status || PostStatus.Draft,
+        publish_at: postDto.publish_at,
         userId,
       },
     });
@@ -48,46 +50,50 @@ export const createPost = async (
 export const ListPosts = async (
   req: Request,
   res: Response
-): PaginationResponse<IUser> => {
-  const { page = 1, pageSize = 10 } = req.query;
-
+): PaginationResponse<IPost> => {
   try {
+    const { page = 1, pageSize = 10, status } = req.query;
     const skip = (Number(page) - 1) * Number(pageSize);
 
-    const posts = await prisma.post.findMany({
-      skip,
-      take: Number(pageSize),
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    // Type guard and conversion for status
+    const validStatus: PostStatus | undefined = status && 
+      ['Draft', 'Published', 'Scheduled'].includes(status as string) 
+        ? status as PostStatus 
+        : undefined;
 
-    const totalPosts = await prisma.post.count();
-
-    const totalPages = Math.ceil(totalPosts / Number(pageSize));
-
-    const nextPage = Number(page) < totalPages ? Number(page) + 1 : null;
-    const prevPage = Number(page) > 1 ? Number(page) - 1 : null;
-
-    const response: pagination<IPost> = {
-      currentPage: Number(page),
-      nextPage,
-      prevPage,
-      totalPages,
-      totalDocs: totalPosts,
-      data: posts,
+    const where: Prisma.PostWhereInput = {
+      ...(validStatus && { status: validStatus }),
+      OR: validStatus ? [
+        { status: validStatus, publish_at: null },
+        { status: validStatus, publish_at: { lte: new Date() } }
+      ] : undefined
     };
 
-    return res.status(200).json(response);
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        skip,
+        take: Number(pageSize),
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: {
+          created_at: 'desc'
+        }
+      }),
+      prisma.post.count({ where })
+    ]);
+
+    return res.status(200).json(createPagination({ page: Number(page), pageSize: Number(pageSize), total, data: posts }));
   } catch (error) {
     console.error("Error listing posts:", error);
-    return res.status(500).json({ error: "Failed to list posts" });
+    return res.status(500).json({ error: "Failed to retrieve posts" });
   }
 };
 
@@ -96,6 +102,9 @@ export const updatePost = async (
   res: Response
 ): BasResponse<IPost> => {
   try {
+    const postId = parseInt(req.params.postId);
+    const userId = req.user?.id as number;
+    
     const postDto = plainToClass(UpdatePostDto, req.body);
     const errors = await validate(postDto);
     
@@ -109,24 +118,26 @@ export const updatePost = async (
       });
     }
 
-    const postId = parseInt(req.params.postId);
-    const userId = req.user?.id as number;
-
-    const post = await prisma.post.findUnique({
-      where: { id: postId },
+    const existingPost = await prisma.post.findUnique({
+      where: { id: postId }
     });
 
-    if (!post) {
+    if (!existingPost) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    if (post.userId !== userId) {
+    if (existingPost.userId !== userId) {
       return res.status(403).json({ error: "Not authorized to update this post" });
     }
 
     const updatedPost = await prisma.post.update({
       where: { id: postId },
-      data: postDto,
+      data: {
+        ...(postDto.title && { title: postDto.title }),
+        ...(postDto.content && { content: postDto.content }),
+        ...(postDto.status && { status: postDto.status }),
+        ...(postDto.publish_at && { publish_at: postDto.publish_at }),
+      },
     });
 
     return res.status(200).json({ updatedPost });
@@ -140,27 +151,29 @@ export const deletePost = async (
   req: Request,
   res: Response
 ): DeleteResponse => {
-  const { postId } = req.params;
-
   try {
+    const postId = parseInt(req.params.postId);
+    const userId = req.user?.id as number;
+
     const post = await prisma.post.findUnique({
-      where: { id: parseInt(postId) },
+      where: { id: postId }
     });
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    if (post.userId !== req?.user?.id) {
-      return res.status(403).json({ error: "You are not authorized to delete this post" });
+    if (post.userId !== userId) {
+      return res.status(403).json({ error: "Not authorized to delete this post" });
     }
 
     await prisma.post.delete({
-      where: { id: parseInt(postId) },
+      where: { id: postId }
     });
 
-    return res.status(200).json({ message: "post deleted successfully" });
+    return res.status(204).send();
   } catch (error) {
-    return res.status(500).json({ error: "Failed to delete post" });
+    console.error("Error deleting post:", error);
+    return res.status(500).json({ error: "Post deletion failed" });
   }
 };
