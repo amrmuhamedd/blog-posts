@@ -26,9 +26,11 @@ import { Type } from 'class-transformer';
  *         publish_at:
  *           type: string
  *           format: date-time
- *         categoryId:
- *           type: number
- *           description: ID of the category
+ *         categories:
+ *           type: array
+ *           items:
+ *             type: number
+ *           description: Array of category IDs
  *         tags:
  *           type: array
  *           items:
@@ -52,8 +54,9 @@ export class CreatePostDto {
   publish_at?: Date;
 
   @IsOptional()
-  @IsNumber()
-  categoryId?: number;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  categories?: number[];
 
   @IsOptional()
   @IsArray()
@@ -81,9 +84,11 @@ export class CreatePostDto {
  *         publish_at:
  *           type: string
  *           format: date-time
- *         categoryId:
- *           type: number
- *           description: ID of the category
+ *         categories:
+ *           type: array
+ *           items:
+ *             type: number
+ *           description: Array of category IDs
  *         tags:
  *           type: array
  *           items:
@@ -111,8 +116,9 @@ export class UpdatePostDto {
   publish_at?: Date;
 
   @IsOptional()
-  @IsNumber()
-  categoryId?: number;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  categories?: number[];
 
   @IsOptional()
   @IsArray()
