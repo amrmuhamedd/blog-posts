@@ -35,6 +35,13 @@ A modern, feature-rich blogging platform API built with Node.js, Express, TypeSc
   - Bio and personal information
   - Activity tracking
 
+- **Audit Logging System**
+  - Comprehensive activity tracking
+  - User action logging across all modules
+  - Detailed audit trail for compliance
+  - Action types: CREATE, READ, UPDATE, DELETE
+  - Entity-specific audit records
+
 ## Architecture
 
 The project follows a modular architecture with clear separation of concerns:
@@ -43,10 +50,14 @@ The project follows a modular architecture with clear separation of concerns:
 src/
 ├── core/                 # Core functionality and shared code
 │   ├── middleware/      # Express middleware
+│   │   └── audit/      # Audit logging middleware
 │   ├── interfaces/      # TypeScript interfaces
+│   ├── services/       # Core services
+│   │   └── audit/     # Audit logging service
 │   └── utils/          # Utility functions
 │
 ├── modules/             # Feature modules
+│   ├── audit/          # Audit system module
 │   ├── users/          # User management
 │   ├── posts/          # Blog posts
 │   ├── comments/       # Comments system
@@ -170,6 +181,12 @@ yarn test:coverage
 ### Reactions
 - `POST /api/reactions/:entityType/:entityId/like`: Toggle like
 - `GET /api/reactions/:entityType/:entityId/likes`: Get likes count
+
+### Audit Logs
+- `GET /api/audit/logs`: List audit logs (Admin only)
+- `GET /api/audit/logs/:entityType`: Get logs by entity type
+- `GET /api/audit/logs/:entityType/:entityId`: Get entity-specific logs
+- `GET /api/audit/users/:userId/activity`: Get user activity logs
 
 ## Contributing
 
