@@ -113,7 +113,7 @@ export class PostService {
         title: data.title,
         content: data.content,
         status: data.status,
-        publish_at: data.publishAt,
+        publish_at: data.publish_at,
         userId,
         categories: {
           create: data.categories?.map(categoryId => ({
@@ -170,7 +170,7 @@ export class PostService {
         title: data.title,
         content: data.content,
         status: data.status,
-        publish_at: data.publishAt,
+        publish_at: data.publish_at,
         categories: {
           deleteMany: {},
           create: data.categories?.map(categoryId => ({
