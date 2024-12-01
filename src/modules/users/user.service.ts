@@ -26,7 +26,7 @@ export class UserService {
     });
 
     if (existingUser) {
-      throw new ConflictError('User already exists');
+      throw new ConflictError('Email already in use');
     }
 
     let profilePicture = '';
@@ -78,12 +78,12 @@ export class UserService {
     });
 
     if (!user) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const isPasswordValid = await comparePasswords(loginDto.password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const { password, ...userWithoutPassword } = user;
@@ -111,7 +111,7 @@ export class UserService {
     });
 
     if (!user) {
-      throw new UnauthorizedError('User not found');
+      throw new UnauthorizedError('Invalid user ID');
     }
 
     await auditService.log(userId, 'READ', EntityType.User, userId);

@@ -35,7 +35,7 @@ export class TagController {
       throw new ValidationError('Validation failed', errors);
     }
 
-    const result = await tagService.createTag(tagDto);
+    const result = await tagService.createTag(tagDto,  req.user.id);
     return res.status(201).json(result);
   }
 
@@ -47,12 +47,12 @@ export class TagController {
       throw new ValidationError('Validation failed', errors);
     }
 
-    const result = await tagService.updateTag(Number(req.params.id), tagDto);
+    const result = await tagService.updateTag(Number(req.params.id), tagDto, Number(req.user.id));
     return res.status(200).json(result);
   }
 
   async deleteTag(req: Request, res: Response) {
-    await tagService.deleteTag(Number(req.params.id));
+    await tagService.deleteTag(Number(req.params.id), req.user.id);
     return res.status(204).send();
   }
 }
