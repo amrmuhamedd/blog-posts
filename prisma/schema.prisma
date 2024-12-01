@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-  phone    String
-  role Role @default(USER)
+  id              Int        @id @default(autoincrement())
+  name            String
+  email           String     @unique
+  password        String
+  phone           String
+  role            Role       @default(USER)
   profile_picture String
-  bio String
-  posts    Post[]
-  comments Comment[]
+  bio             String
+  posts           Post[]
+  comments        Comment[]
+  reactions       Reaction[]
 }
 
 enum Role {
@@ -29,6 +30,17 @@ enum PostStatus {
   Draft
   Published
   Scheduled
+}
+
+enum EntityType {
+  Post
+  Comment
+}
+
+enum ReactionType {
+  Like
+  Dislike
+  Love
 }
 
 model Category {
@@ -103,4 +115,18 @@ model Comment {
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   parent     Comment?  @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
   replies    Comment[] @relation("CommentReplies")
+}
+
+model Reaction {
+  id          Int          @id @default(autoincrement())
+  user        User         @relation(fields: [user_id], references: [id])
+  user_id     Int
+  entity_type EntityType
+  entity_id   Int
+  reaction    ReactionType
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  @@unique([user_id, entity_type, entity_id])
+  @@index([entity_type, entity_id])
 }
