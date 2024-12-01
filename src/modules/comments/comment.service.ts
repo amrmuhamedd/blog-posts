@@ -44,6 +44,10 @@ export class CommentService {
     });
   }
 
+  async getCommentsByPostId(postId: number) {
+    return this.listComments(postId);
+  }
+
   async getComment(commentId: number) {
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },

@@ -5,9 +5,9 @@ import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 
 export const commentController = {
-  async getCommentsByPostId(req: Request, res: Response) {
+  async listComments(req: Request, res: Response) {
     const postId = parseInt(req.params.postId);
-    const comments = await commentService.getCommentsByPostId(postId);
+    const comments = await commentService.listComments(postId);
     res.json(comments);
   },
 
