@@ -55,7 +55,7 @@ const router = Router();
  *       404:
  *         description: Post not found
  */
-router.get('/:postId', asyncHandler(commentController.getCommentsByPostId));
+router.get('/:postId', asyncHandler(commentController.listComments));
 
 /**
  * @swagger
