@@ -5,3 +5,9 @@ export interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+
+import { Request } from 'express';
+
+export interface AuthenticatedRequest extends Request {
+  user: JwtPayload;
+}

@@ -13,6 +13,7 @@ import { tagRoutes } from './modules/tags/tag.routes';
 import { categoryRoutes } from './modules/categories/category.routes';
 import  {commentRouter}  from './modules/comments/comment.routes';
 import { reactionRouter } from './modules/reactions/reaction.routes';
+import auditRoutes from './modules/audit/audit.routes';
 
 class App {
   public app: express.Application;
@@ -47,6 +48,7 @@ class App {
     this.app.use(`${this.apiPrefix}/categories`, categoryRoutes);
     this.app.use(`${this.apiPrefix}/comments`, commentRouter);
     this.app.use(`${this.apiPrefix}/reactions`, reactionRouter);
+    this.app.use(`${this.apiPrefix}/audit`, auditRoutes);
 
     // Health check endpoint
     this.app.get('/health', (_, res) => {

@@ -19,6 +19,7 @@ model User {
   posts           Post[]
   comments        Comment[]
   reactions       Reaction[]
+  audit_logs      AuditLog[]
 }
 
 enum Role {
@@ -35,12 +36,23 @@ enum PostStatus {
 enum EntityType {
   Post
   Comment
+  User
+  Media
+  Category
+  Tag
+  Reaction
 }
 
 enum ReactionType {
   Like
   Dislike
   Love
+}
+
+enum MediaType {
+  Image
+  Video
+  Attachment
 }
 
 model Category {
@@ -64,7 +76,8 @@ model Post {
   tags       PostTag[]
   categories PostCategory[]
   comments   Comment[]
-
+  media      Media[]
+  
   @@index([userId])
 }
 
@@ -117,6 +130,15 @@ model Comment {
   replies    Comment[] @relation("CommentReplies")
 }
 
+model Media {
+  id       Int       @id @default(autoincrement())
+  post     Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId   Int
+  file_url String    @db.VarChar(255)
+  type     MediaType
+  @@index([postId])
+}
+
 model Reaction {
   id          Int          @id @default(autoincrement())
   user        User         @relation(fields: [user_id], references: [id])
@@ -126,7 +148,21 @@ model Reaction {
   reaction    ReactionType
   created_at  DateTime     @default(now())
   updated_at  DateTime     @updatedAt
-
+  
   @@unique([user_id, entity_type, entity_id])
   @@index([entity_type, entity_id])
+}
+
+model AuditLog {
+  id          Int        @id @default(autoincrement())
+  user_id     Int
+  action      String
+  entity_type EntityType?
+  entity_id   Int?
+  timestamp   DateTime   @default(now())
+  user        User       @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([entity_type, entity_id])
+  @@map("audit_logs")
 }
