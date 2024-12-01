@@ -65,6 +65,62 @@ class ReactionService {
       },
     });
   }
+
+  async toggleLike(userId: number, entityType: EntityType, entityId: number) {
+    const existingReaction = await prisma.reaction.findUnique({
+      where: {
+        user_id_entity_type_entity_id: {
+          user_id: userId,
+          entity_type: entityType,
+          entity_id: entityId,
+        },
+      },
+    });
+
+    if (existingReaction) {
+      // If like exists, remove it (toggle off)
+      await prisma.reaction.delete({
+        where: { id: existingReaction.id },
+      });
+      return null;
+    }
+
+    // If no like exists, create new one
+    return prisma.reaction.create({
+      data: {
+        user_id: userId,
+        entity_type: entityType,
+        entity_id: entityId,
+        reaction: ReactionType.Like,
+      },
+    });
+  }
+
+  async getLikes(entityType: EntityType, entityId: number) {
+    const likes = await prisma.reaction.count({
+      where: {
+        entity_type: entityType,
+        entity_id: entityId,
+        reaction: ReactionType.Like,
+      },
+    });
+
+    return { likes };
+  }
+
+  async hasUserLiked(userId: number, entityType: EntityType, entityId: number) {
+    const reaction = await prisma.reaction.findUnique({
+      where: {
+        user_id_entity_type_entity_id: {
+          user_id: userId,
+          entity_type: entityType,
+          entity_id: entityId,
+        },
+      },
+    });
+
+    return reaction?.reaction === ReactionType.Like;
+  }
 }
 
 export const reactionService = new ReactionService();

@@ -81,4 +81,56 @@ router.post('/', authMiddleware, asyncHandler(reactionController.toggleReaction)
  */
 router.get('/:entityType/:entityId', asyncHandler(reactionController.getReactions));
 
+/**
+ * @swagger
+ * /api/reactions/{entityType}/{entityId}/like:
+ *   post:
+ *     tags: [Reactions]
+ *     summary: Toggle like for an entity
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: entityType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [Post, Comment]
+ *       - in: path
+ *         name: entityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Like toggled successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/:entityType/:entityId/like', authMiddleware, asyncHandler(reactionController.toggleLike));
+
+/**
+ * @swagger
+ * /api/reactions/{entityType}/{entityId}/likes:
+ *   get:
+ *     tags: [Reactions]
+ *     summary: Get likes count for an entity
+ *     parameters:
+ *       - in: path
+ *         name: entityType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [Post, Comment]
+ *       - in: path
+ *         name: entityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Likes count and user's like status
+ */
+router.get('/:entityType/:entityId/likes', asyncHandler(reactionController.getLikes));
+
 export { router as reactionRouter };

@@ -36,4 +36,32 @@ export const reactionController = {
       userReaction: userReaction?.reaction || null,
     });
   },
+
+  async toggleLike(req: Request, res: Response) {
+    const entityType = req.params.entityType as EntityType;
+    const entityId = parseInt(req.params.entityId);
+
+    if (!Object.values(EntityType).includes(entityType)) {
+      return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const reaction = await reactionService.toggleLike(req.user.id, entityType, entityId);
+    res.json({ success: true, liked: !!reaction });
+  },
+
+  async getLikes(req: Request, res: Response) {
+    const entityType = req.params.entityType as EntityType;
+    const entityId = parseInt(req.params.entityId);
+
+    if (!Object.values(EntityType).includes(entityType)) {
+      return res.status(400).json({ error: 'Invalid entity type' });
+    }
+
+    const { likes } = await reactionService.getLikes(entityType, entityId);
+    const hasLiked = req.user?.id 
+      ? await reactionService.hasUserLiked(req.user.id, entityType, entityId)
+      : false;
+
+    res.json({ likes, hasLiked });
+  },
 };
