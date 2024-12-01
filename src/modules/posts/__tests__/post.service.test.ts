@@ -1,9 +1,7 @@
 import { PostService } from '../post.service';
 import { prisma } from '../../../core/database/prisma.service';
 import { auditService } from '../../../core/services/audit.service';
-import { NotFoundError } from '../../../core/errors/not-found.error';
-import { ForbiddenError } from '../../../core/errors/forbidden.error';
-import { PostStatus, EntityType } from '@prisma/client';
+import { PostStatus, EntityType, ReactionType } from '@prisma/client';
 
 // Mock dependencies
 jest.mock('../../../core/database/prisma.service', () => ({
@@ -15,6 +13,13 @@ jest.mock('../../../core/database/prisma.service', () => ({
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
+    },
+    reaction: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+      groupBy: jest.fn(),
     },
   },
 }));
@@ -147,10 +152,19 @@ describe('PostService', () => {
       user: { id: 1, name: 'User 1', email: 'user1@test.com' },
       categories: [],
       tags: [],
+      reactions: {
+        likes: 5,
+        loves: 2,
+      },
+      userReaction: null
     };
 
     it('should get a post by id', async () => {
       (prisma.post.findUnique as jest.Mock).mockResolvedValue(mockPost);
+      (prisma.reaction.groupBy as jest.Mock).mockResolvedValue([
+        { reaction: ReactionType.Like, _count: 5 },
+        { reaction: ReactionType.Love, _count: 2 },
+      ]);
 
       const result = await postService.getPost(postId, userId);
 
@@ -158,8 +172,40 @@ describe('PostService', () => {
         where: { id: postId },
         include: expect.any(Object),
       });
+      expect(prisma.reaction.groupBy).toHaveBeenCalledWith({
+        by: ['reaction'],
+        where: {
+          entity_type: EntityType.Post,
+          entity_id: postId,
+        },
+        _count: true,
+      });
       expect(auditService.log).toHaveBeenCalledWith(userId, 'READ', EntityType.Post, postId);
       expect(result).toEqual(mockPost);
+    });
+
+    it('should get user reaction status if userId is provided', async () => {
+      (prisma.post.findUnique as jest.Mock).mockResolvedValue(mockPost);
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: ReactionType.Like,
+      });
+
+      const result = await postService.getPost(postId, userId);
+
+      expect(prisma.reaction.findUnique).toHaveBeenCalledWith({
+        where: {
+          user_id_entity_type_entity_id: {
+            user_id: userId,
+            entity_type: EntityType.Post,
+            entity_id: postId,
+          },
+        },
+      });
+      expect(result.userReaction).toBe(ReactionType.Like);
     });
 
     it('should throw NotFoundError if post does not exist', async () => {
@@ -329,6 +375,99 @@ describe('PostService', () => {
       await expect(postService.deletePost(postId, differentUserId))
         .rejects.toThrow('You can only delete your own posts');
       expect(prisma.post.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createReaction', () => {
+    const postId = 1;
+    const reactionType = ReactionType.Like;
+
+    it('should create a new reaction', async () => {
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.reaction.create as jest.Mock).mockResolvedValue({
+        id: 1,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: reactionType,
+      });
+
+      const result = await postService.createReaction(postId, userId, reactionType);
+
+      expect(prisma.reaction.create).toHaveBeenCalledWith({
+        data: {
+          user_id: userId,
+          entity_type: EntityType.Post,
+          entity_id: postId,
+          reaction: reactionType,
+        },
+      });
+      expect(auditService.log).toHaveBeenCalledWith(userId, 'CREATE', EntityType.Reaction, result.id);
+      expect(result).toEqual({
+        id: 1,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: reactionType,
+      });
+    });
+
+    it('should throw ForbiddenError if user already reacted with the same reaction', async () => {
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue({
+        id: 1,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: reactionType,
+      });
+
+      await expect(postService.createReaction(postId, userId, reactionType))
+        .rejects.toThrow('You already reacted with this reaction');
+    });
+  });
+
+  describe('deleteReaction', () => {
+    const postId = 1;
+    const reactionId = 1;
+
+    it('should delete a reaction', async () => {
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue({
+        id: reactionId,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: ReactionType.Like,
+      });
+
+      await postService.deleteReaction(reactionId, userId);
+
+      expect(prisma.reaction.delete).toHaveBeenCalledWith({
+        where: { id: reactionId },
+      });
+      expect(auditService.log).toHaveBeenCalledWith(userId, 'DELETE', EntityType.Reaction, reactionId);
+    });
+
+    it('should throw NotFoundError if reaction does not exist', async () => {
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(postService.deleteReaction(reactionId, userId))
+        .rejects.toThrow('Reaction not found');
+      expect(prisma.reaction.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError if user is not the reaction author', async () => {
+      const differentUserId = 2;
+      (prisma.reaction.findUnique as jest.Mock).mockResolvedValue({
+        id: reactionId,
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction: ReactionType.Like,
+      });
+
+      await expect(postService.deleteReaction(reactionId, differentUserId))
+        .rejects.toThrow('You can only delete your own reactions');
+      expect(prisma.reaction.delete).not.toHaveBeenCalled();
     });
   });
 });

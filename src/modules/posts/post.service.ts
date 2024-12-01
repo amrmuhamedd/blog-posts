@@ -1,5 +1,5 @@
 import { prisma } from '../../core/database/prisma.service';
-import { PostStatus, Prisma, EntityType } from '@prisma/client';
+import { PostStatus, Prisma, EntityType, ReactionType } from '@prisma/client';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { NotFoundError } from '../../core/errors/not-found.error';
 import { ForbiddenError } from '../../core/errors/forbidden.error';
@@ -72,24 +72,34 @@ export class PostService {
   }
 
   async getPost(postId: number, userId?: number) {
-    const post = await prisma.post.findUnique({
-      where: { id: postId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
+    const [post, reactions] = await Promise.all([
+      prisma.post.findUnique({
+        where: { id: postId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          categories: {
+            include: {
+              category: true
+            }
+          },
+          tags: true
+        }
+      }),
+      prisma.reaction.groupBy({
+        by: ['reaction'],
+        where: {
+          entity_type: EntityType.Post,
+          entity_id: postId,
         },
-        categories: {
-          include: {
-            category: true
-          }
-        },
-        tags: true
-      }
-    });
+        _count: true,
+      })
+    ]);
 
     if (!post) {
       throw new NotFoundError('Post not found');
@@ -101,10 +111,32 @@ export class PostService {
       }
     }
 
+    let userReaction = null;
     if (userId) {
-      await auditService.log(userId, 'READ', EntityType.Post, post.id);
+      const reaction = await prisma.reaction.findUnique({
+        where: {
+          user_id_entity_type_entity_id: {
+            user_id: userId,
+            entity_type: EntityType.Post,
+            entity_id: postId
+          }
+        }
+      });
+
+      userReaction = reaction ? reaction.reaction : null;
+      await auditService.log(userId, 'READ', EntityType.Post, postId);
     }
-    return post;
+
+    const reactionCounts = reactions.reduce((acc, curr) => {
+      acc[curr.reaction.toLowerCase() + 's'] = curr._count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      ...post,
+      reactions: reactionCounts,
+      userReaction
+    };
   }
 
   async createPost(userId: number, data: CreatePostDto) {
@@ -227,6 +259,54 @@ export class PostService {
     });
 
     await auditService.log(userId, 'DELETE', EntityType.Post, postId);
+  }
+
+  async createReaction(postId: number, userId: number, reaction: ReactionType) {
+    const existingReaction = await prisma.reaction.findUnique({
+      where: {
+        user_id_entity_type_entity_id: {
+          user_id: userId,
+          entity_type: EntityType.Post,
+          entity_id: postId,
+        }
+      }
+    });
+
+    if (existingReaction && existingReaction.reaction === reaction) {
+      throw new ForbiddenError('You already reacted with this reaction');
+    }
+
+    const newReaction = await prisma.reaction.create({
+      data: {
+        user_id: userId,
+        entity_type: EntityType.Post,
+        entity_id: postId,
+        reaction,
+      }
+    });
+
+    await auditService.log(userId, 'CREATE', EntityType.Reaction, newReaction.id);
+    return newReaction;
+  }
+
+  async deleteReaction(reactionId: number, userId: number) {
+    const reaction = await prisma.reaction.findUnique({
+      where: { id: reactionId }
+    });
+
+    if (!reaction) {
+      throw new NotFoundError('Reaction not found');
+    }
+
+    if (reaction.user_id !== userId) {
+      throw new ForbiddenError('You can only delete your own reactions');
+    }
+
+    await prisma.reaction.delete({
+      where: { id: reactionId }
+    });
+
+    await auditService.log(userId, 'DELETE', EntityType.Reaction, reactionId);
   }
 }
 
