@@ -1,9 +1,10 @@
 import { prisma } from '../../core/database/prisma.service';
-import { CreateTagDto, UpdateTagDto } from './dto/tag.dto';
+import { CreateTagDto } from './dto/tag.dto';
+import { UpdateTagDto } from './dto/tag.dto';
+import { auditService } from '../../core/services/audit.service';
+import { EntityType } from '@prisma/client';
 import { NotFoundError } from '../../core/errors/not-found.error';
 import { PaginationParams } from '../../core/interfaces/pagination.interface';
-import { EntityType } from '@prisma/client';
-import { auditService } from '../../core/services/audit.service';
 
 export class TagService {
   private static instance: TagService;
