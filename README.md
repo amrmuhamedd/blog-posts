@@ -1,92 +1,184 @@
-# Blog REST API Documentation
+# Blog Posts API
 
-## Introduction
+A modern, feature-rich blogging platform API built with Node.js, Express, TypeScript, and PostgreSQL. This project follows clean architecture principles and provides a robust foundation for building scalable blog applications.
 
-Welcome to the Blog REST API documentation. This API allows users to register, log in, create posts, list posts, edit user-related posts, and delete user-related posts. It provides basic functionality for managing a blog.
+## Features
 
-![image](https://github.com/amrmuhamedd/blog-posts/assets/47860740/f51832fb-c1ef-430f-8858-8a01a82b8df6)
+- **Authentication & Authorization**
+  - JWT-based authentication
+  - Role-based access control (Admin/User)
+  - Secure password hashing with bcrypt
 
+- **Blog Posts Management**
+  - CRUD operations for posts
+  - Draft/Published/Scheduled post status
+  - Categories and tags support
+  - Rich text content support
 
-## Tech Stack
+- **Comments System**
+  - Nested comments support
+  - Comment moderation
+  - CRUD operations for comments
 
-The Blog REST API is built using the following technologies:
+- **Reactions System**
+  - Like/Unlike posts and comments
+  - Reaction counts and user reaction status
+  - Extensible reaction types
 
-- **Node.js**: The server-side environment for running JavaScript.
-- **Express.js**: A fast and minimalist web framework for Node.js.
-- **Prisma**: An ORM (Object-Relational Mapping) for database interactions.
-- **PostgreSQL**: A powerful, open-source relational database.
-- **JWT (JSON Web Tokens)**: For secure authentication and authorization.
-- **Swagger**: For API documentation.
-- **Docker**: For containerization and deployment.
+- **Media Management**
+  - Image upload support with Cloudinary
+  - Profile picture management
+  - Media optimization
 
-## Thought Process
+- **User Management**
+  - User profiles with avatars
+  - Bio and personal information
+  - Activity tracking
 
-### Project Structure
+## Architecture
 
-The project is organized into the following components:
+The project follows a modular architecture with clear separation of concerns:
 
-- **Controllers**: Responsible for handling HTTP requests and responses.
-- **Routes**: Define the API endpoints and connect them to controller functions.
-- **Middleware**: Contains custom middleware functions, such as authentication.
-- **Validators**: Define input validation schemas using libraries like express-validator.
-- **Prisma Schema**: Defines the database schema and model relationships.
-- **Docker Configuration**: Provides Dockerfile and docker-compose.yml for containerization.
-- **Environment Variables**: Utilizes a `.env` file for sensitive configuration.
-- **Swagger Configuration**: For auto-generating API documentation.
+```
+src/
+├── core/                 # Core functionality and shared code
+│   ├── middleware/      # Express middleware
+│   ├── interfaces/      # TypeScript interfaces
+│   └── utils/          # Utility functions
+│
+├── modules/             # Feature modules
+│   ├── users/          # User management
+│   ├── posts/          # Blog posts
+│   ├── comments/       # Comments system
+│   ├── reactions/      # Reactions/Likes
+│   ├── categories/     # Post categories
+│   └── tags/           # Post tags
+│
+└── app.ts              # Application entry point
+```
 
-### Assumptions
+Each module follows a consistent structure:
+- `controller.ts`: Request handling and response formatting
+- `service.ts`: Business logic implementation
+- `routes.ts`: Route definitions and middleware
+- `dto/`: Data Transfer Objects for validation
 
-- It's assumed that you have Docker and Node.js installed on your development machine.
-- PostgreSQL is used as the preferred database, but you can switch to MongoDB by modifying the Prisma schema and database configuration.
-- The project assumes a basic understanding of RESTful APIs and JavaScript/Node.js development.
+## Technology Stack
+
+- **Runtime**: Node.js (>18.16.0)
+- **Framework**: Express.js
+- **Language**: TypeScript
+- **ORM**: Prisma
+- **Database**: PostgreSQL
+- **Authentication**: JWT
+- **Validation**: class-validator, express-validator
+- **File Upload**: Multer, Cloudinary
+- **Documentation**: Swagger/OpenAPI
+- **Development**: ESLint, Nodemon
 
 ## Getting Started
 
-Follow these instructions to run the project locally using Node js:
-
-1. Clone the project repository to your local machine:
-
+1. **Clone the repository**
    ```bash
-   git clone <repository_url>
-   cd <project_directory>
+   git clone https://github.com/yourusername/blog-posts.git
+   cd blog-posts
+   ```
 
-1. Create a .env file in the project root and configure the following environment variables:
+2. **Install dependencies**
+   ```bash
+   yarn install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Run database migrations
+   yarn migrate
+   ```
+
+5. **Start Development Server**
+   ```bash
+   yarn dev
+   ```
+
+6. **Build for Production**
+   ```bash
+   yarn build
+   yarn start
+   ```
+
+## Docker Support
+
+The project includes Docker support for easy deployment:
 
 ```bash
-PORT=3000
-DATABASE_URL= postgres://<db_user>:<db_password>@<db_host>:<db_port>/<db_name>
-SECRET_KEY=<your_secret_key>
-```
-2. install debndaceis
-
-```bash
-yarn install
-```
-3. Run database migrations: 
-```bash
-yarn migrate
-```
-
-4. Start the development server:
-   
-```bash
-yarn dev
-```
-
-Now you can see your API docs at: `http://localhost:3000/api-docs/#/`
-## Running with Docker
-
-after cloning the repo just run: 
-```bash
+# Build and run with Docker Compose
 docker-compose up --build
 ```
-Now you can see your API docs at: `http://localhost:3000/api-docs/#/`
 
+## API Documentation
 
-## live preview 
+API documentation is available at `/api-docs` when running the server. The API follows RESTful principles and includes:
 
-you can see the live preview [here](https://blog-post-ppzc.onrender.com/api-docs/#/) . Please note that the initial launch of the documentation may be a bit slow as it is hosted on a free hosting plan.
-## At the end 
-Please refer to the Swagger documentation for detailed information on each endpoint and how to use them.
+- Detailed endpoint descriptions
+- Request/Response examples
+- Authentication requirements
+- Schema definitions
 
-If you have any questions or encounter issues, feel free to reach out for assistance. Happy coding!
+## Environment Variables
+
+Required environment variables (see `.env.example`):
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret key for JWT signing
+- `CLOUDINARY_*`: Cloudinary configuration
+- `PORT`: Server port (default: 3000)
+
+## Testing
+
+```bash
+# Run tests
+yarn test
+
+# Run tests with coverage
+yarn test:coverage
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register`: Register new user
+- `POST /api/auth/login`: Login user
+
+### Posts
+- `GET /api/posts`: List posts
+- `POST /api/posts`: Create post
+- `GET /api/posts/:id`: Get post
+- `PUT /api/posts/:id`: Update post
+- `DELETE /api/posts/:id`: Delete post
+
+### Comments
+- `GET /api/comments/:postId`: List comments
+- `POST /api/comments`: Create comment
+- `PUT /api/comments/:id`: Update comment
+- `DELETE /api/comments/:id`: Delete comment
+
+### Reactions
+- `POST /api/reactions/:entityType/:entityId/like`: Toggle like
+- `GET /api/reactions/:entityType/:entityId/likes`: Get likes count
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
