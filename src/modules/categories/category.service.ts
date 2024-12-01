@@ -3,6 +3,8 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { NotFoundError } from '../../core/errors/not-found.error';
 import { PaginationParams } from '../../core/interfaces/pagination.interface';
 import { ConflictError } from '../../core/errors/conflict.error';
+import { EntityType } from '@prisma/client';
+import { auditService } from '../../core/services/audit.service';
 
 export class CategoryService {
   private static instance: CategoryService;
@@ -54,13 +56,30 @@ export class CategoryService {
     };
   }
 
-  async createCategory(createCategoryDto: CreateCategoryDto) {
+  async createCategory(data: CreateCategoryDto, userId: number) {
     try {
-      return await prisma.category.create({
-        data: {
-          name: createCategoryDto.name
+      const existing = await prisma.category.findFirst({
+        where: {
+          name: {
+            equals: data.name,
+            mode: 'insensitive'
+          }
         }
       });
+
+      if (existing) {
+        throw new ConflictError('Category with this name already exists');
+      }
+
+      const category = await prisma.category.create({
+        data: {
+          name: data.name
+        }
+      });
+
+      await auditService.log(userId, 'CREATE', EntityType.Category, category.id);
+
+      return category;
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictError('Category name already exists');
@@ -69,7 +88,7 @@ export class CategoryService {
     }
   }
 
-  async updateCategory(id: number, updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(id: number, data: UpdateCategoryDto, userId: number) {
     const category = await prisma.category.findUnique({
       where: { id }
     });
@@ -79,13 +98,33 @@ export class CategoryService {
     }
 
     try {
-      return await prisma.category.update({
+      if (data.name) {
+        const existing = await prisma.category.findFirst({
+          where: {
+            id: { not: id },
+            name: {
+              equals: data.name,
+              mode: 'insensitive'
+            }
+          }
+        });
+
+        if (existing) {
+          throw new ConflictError('Category with this name already exists');
+        }
+      }
+
+      const updatedCategory = await prisma.category.update({
         where: { id },
         data: {
-          name: updateCategoryDto.name,
+          name: data.name,
           updated_at: new Date()
         }
       });
+
+      await auditService.log(userId, 'UPDATE', EntityType.Category, id);
+
+      return updatedCategory;
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictError('Category name already exists');
@@ -94,7 +133,7 @@ export class CategoryService {
     }
   }
 
-  async deleteCategory(id: number) {
+  async deleteCategory(id: number, userId: number) {
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -111,9 +150,11 @@ export class CategoryService {
     await prisma.category.delete({
       where: { id }
     });
+
+    await auditService.log(userId, 'DELETE', EntityType.Category, id);
   }
 
-  async getCategory(id: number) {
+  async getCategory(id: number, userId?: number) {
     const category = await prisma.category.findUnique({
       where: { id },
       include: {
@@ -125,6 +166,10 @@ export class CategoryService {
 
     if (!category) {
       throw new NotFoundError('Category not found');
+    }
+
+    if (userId) {
+      await auditService.log(userId, 'READ', EntityType.Category, category.id);
     }
 
     return {

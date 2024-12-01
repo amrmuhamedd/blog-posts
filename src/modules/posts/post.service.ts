@@ -1,9 +1,10 @@
 import { prisma } from '../../core/database/prisma.service';
-import { PostStatus, Prisma } from '@prisma/client';
+import { PostStatus, Prisma, EntityType } from '@prisma/client';
 import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { NotFoundError } from '../../core/errors/not-found.error';
 import { ForbiddenError } from '../../core/errors/forbidden.error';
 import { PaginationParams } from '../../core/interfaces/pagination.interface';
+import { auditService } from '../../core/services/audit.service';
 
 export class PostService {
   private static instance: PostService;
@@ -70,7 +71,7 @@ export class PostService {
     };
   }
 
-  async getPost(postId: number) {
+  async getPost(postId: number, userId?: number) {
     const post = await prisma.post.findUnique({
       where: { id: postId },
       include: {
@@ -100,80 +101,35 @@ export class PostService {
       }
     }
 
+    if (userId) {
+      await auditService.log(userId, 'READ', EntityType.Post, post.id);
+    }
     return post;
   }
 
   async createPost(userId: number, data: CreatePostDto) {
-    const { tags = [], categories = [], ...postData } = data;
-
-    return prisma.post.create({
+    const post = await prisma.post.create({
       data: {
-        ...postData,
+        title: data.title,
+        content: data.content,
+        status: data.status,
+        publish_at: data.publishAt,
         userId,
         categories: {
-          create: categories.map(categoryId => ({
+          create: data.categories?.map(categoryId => ({
             category: {
               connect: { id: categoryId }
             }
           }))
         },
         tags: {
-          create: tags.map(tagId => ({
+          create: data.tags?.map(tagId => ({
             tag: {
               connect: { id: tagId }
             }
           }))
         }
       },
-      include: {
-        categories: {
-          include: {
-            category: true
-          }
-        },
-        tags: {
-          include: {
-            tag: true
-          }
-        }
-      }
-    });
-  }
-
-  async updatePost(postId: number, userId: number, data: UpdatePostDto) {
-    const post = await this.getPost(postId);
-
-    if (post.userId !== userId) {
-      throw new ForbiddenError('You are not authorized to update this post');
-    }
-
-    const { tags, categories, ...updateData } = data;
-
-    const updateOperations: Prisma.PostUpdateInput = {
-      ...updateData
-    };
-
-    if (tags !== undefined) {
-      updateOperations.tags = {
-        deleteMany: {},
-        create: tags.map(tagId => ({
-          tag: { connect: { id: tagId } }
-        }))
-      };
-    }
-
-    if (categories !== undefined) {
-      updateOperations.categories = {
-        deleteMany: {},
-        create: categories.map(categoryId => ({
-          category: { connect: { id: categoryId } }
-        }))
-      };
-    }
-
-    return prisma.post.update({
-      where: { id: postId },
-      data: updateOperations,
       include: {
         user: {
           select: {
@@ -187,13 +143,70 @@ export class PostService {
             category: true
           }
         },
-        tags: {
-          include: {
-            tag: true
-          }
-        }
+        tags: true
       }
     });
+
+    await auditService.log(userId, 'CREATE', EntityType.Post, post.id);
+    return post;
+  }
+
+  async updatePost(postId: number, userId: number, data: UpdatePostDto) {
+    const post = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) {
+      throw new NotFoundError('Post not found');
+    }
+
+    if (post.userId !== userId) {
+      throw new ForbiddenError('You can only update your own posts');
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        title: data.title,
+        content: data.content,
+        status: data.status,
+        publish_at: data.publishAt,
+        categories: {
+          deleteMany: {},
+          create: data.categories?.map(categoryId => ({
+            category: {
+              connect: { id: categoryId }
+            }
+          }))
+        },
+        tags: {
+          deleteMany: {},
+          create: data.tags?.map(tagId => ({
+            tag: {
+              connect: { id: tagId }
+            }
+          }))
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        categories: {
+          include: {
+            category: true
+          }
+        },
+        tags: true
+      }
+    });
+
+    await auditService.log(userId, 'UPDATE', EntityType.Post, postId);
+    return updatedPost;
   }
 
   async deletePost(postId: number, userId: number) {
@@ -206,12 +219,14 @@ export class PostService {
     }
 
     if (post.userId !== userId) {
-      throw new ForbiddenError('Not authorized to delete this post');
+      throw new ForbiddenError('You can only delete your own posts');
     }
 
     await prisma.post.delete({
       where: { id: postId }
     });
+
+    await auditService.log(userId, 'DELETE', EntityType.Post, postId);
   }
 }
 

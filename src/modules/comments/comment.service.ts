@@ -2,6 +2,8 @@ import { prisma } from '../../core/database/prisma.service';
 import { CreateCommentDto, UpdateCommentDto } from './dto/comment.dto';
 import { NotFoundError } from '../../core/errors/not-found.error';
 import { ForbiddenError } from '../../core/errors/forbidden.error';
+import { EntityType } from '@prisma/client';
+import { auditService } from '../../core/services/audit.service';
 
 export class CommentService {
   private static instance: CommentService;
@@ -79,6 +81,7 @@ export class CommentService {
       throw new NotFoundError('Comment not found');
     }
 
+    await auditService.log(comment.user_id, 'READ', EntityType.Comment, comment.id);
     return comment;
   }
 
@@ -103,7 +106,7 @@ export class CommentService {
       }
     }
 
-    return prisma.comment.create({
+    const comment = await prisma.comment.create({
       data: {
         content: data.content,
         post_id: data.post_id,
@@ -121,6 +124,9 @@ export class CommentService {
         }
       }
     });
+
+    await auditService.log(userId, 'CREATE', EntityType.Comment, comment.id);
+    return comment;
   }
 
   async updateComment(commentId: number, userId: number, data: UpdateCommentDto) {
@@ -136,7 +142,7 @@ export class CommentService {
       throw new ForbiddenError('You can only update your own comments');
     }
 
-    return prisma.comment.update({
+    const updatedComment = await prisma.comment.update({
       where: { id: commentId },
       data: {
         content: data.content,
@@ -153,6 +159,9 @@ export class CommentService {
         }
       }
     });
+
+    await auditService.log(userId, 'UPDATE', EntityType.Comment, commentId);
+    return updatedComment;
   }
 
   async deleteComment(commentId: number, userId: number) {
@@ -171,6 +180,8 @@ export class CommentService {
     await prisma.comment.delete({
       where: { id: commentId }
     });
+
+    await auditService.log(userId, 'DELETE', EntityType.Comment, commentId);
   }
 }
 
