@@ -77,21 +77,21 @@ Each module follows a consistent structure:
 ## Technology Stack
 
 - **Runtime**: Node.js (>18.16.0)
-- **Framework**: Express.js
-- **Language**: TypeScript
-- **ORM**: Prisma
-- **Database**: PostgreSQL
-- **Authentication**: JWT
+- **Framework**: Express.js with TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Testing**: Jest
+- **Authentication**: JWT with bcrypt
 - **Validation**: class-validator, express-validator
-- **File Upload**: Multer, Cloudinary
 - **Documentation**: Swagger/OpenAPI
-- **Development**: ESLint, Nodemon
+- **Cloud Storage**: Cloudinary
+- **Development**: ESLint, TypeScript
+- **API Security**: CORS enabled
 
-## Getting Started
+## Project Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/blog-posts.git
+   git clone <your-repository-url>
    cd blog-posts
    ```
 
@@ -103,7 +103,7 @@ Each module follows a consistent structure:
 3. **Environment Setup**
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Configure your environment variables
    ```
 
 4. **Database Setup**
@@ -112,16 +112,27 @@ Each module follows a consistent structure:
    yarn migrate
    ```
 
-5. **Start Development Server**
+5. **Development Server**
    ```bash
    yarn dev
    ```
 
-6. **Build for Production**
+6. **Production Build**
    ```bash
    yarn build
    yarn start
    ```
+
+## Available Scripts
+
+- `yarn dev`: Start development server with hot-reload
+- `yarn migrate`: Run Prisma migrations for development
+- `yarn migrate:prod`: Run Prisma migrations for production
+- `yarn build`: Build the TypeScript project
+- `yarn start`: Start the production server
+- `yarn lint`: Run ESLint
+- `yarn test`: Run Jest tests
+- `yarn test:watch`: Run tests in watch mode
 
 ## Docker Support
 
