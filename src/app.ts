@@ -11,6 +11,7 @@ import userRoutes from './modules/users/user.routes';
 import postRoutes from './modules/posts/post.routes';
 import { tagRoutes } from './modules/tags/tag.routes';
 import { categoryRoutes } from './modules/categories/category.routes';
+import commentRoutes from './modules/comments/comment.controller';
 
 class App {
   public app: express.Application;
@@ -43,6 +44,7 @@ class App {
     this.app.use(`${this.apiPrefix}/posts`, postRoutes);
     this.app.use(`${this.apiPrefix}/tags`, tagRoutes);
     this.app.use(`${this.apiPrefix}/categories`, categoryRoutes);
+    this.app.use(`${this.apiPrefix}/comments`, commentRoutes);
 
     // Health check endpoint
     this.app.get('/health', (_, res) => {

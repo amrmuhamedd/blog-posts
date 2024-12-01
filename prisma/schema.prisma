@@ -17,6 +17,7 @@ model User {
   profile_picture String
   bio String
   posts    Post[]
+  comments Comment[]
 }
 
 enum Role {
@@ -50,6 +51,7 @@ model Post {
   updated_at DateTime   @updatedAt
   tags       PostTag[]
   categories PostCategory[]
+  comments   Comment[]
 
   @@index([userId])
 }
@@ -85,4 +87,20 @@ model PostCategory {
   @@id([postId, categoryId])
   @@index([categoryId])
   @@index([postId])
+}
+
+model Comment {
+  id         Int       @id @default(autoincrement())
+  content    String    @db.Text
+  post_id    Int
+  user_id    Int
+  parent_id  Int?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  
+  // Relations
+  post       Post      @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  parent     Comment?  @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("CommentReplies")
 }
