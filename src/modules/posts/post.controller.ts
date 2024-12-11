@@ -18,7 +18,7 @@ export class PostController {
   }
 
   async listPosts(req: Request, res: Response) {
-    const { page, pageSize, status, tag } = req.query;
+    const { page = 1, pageSize = 10, status, tag } = req.query;
     const result = await postService.listPosts({
       page: Number(page),
       pageSize: Number(pageSize),

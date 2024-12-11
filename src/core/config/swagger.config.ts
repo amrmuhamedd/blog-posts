@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: `http://localhost:${config.get('PORT')}/api`,
+        url: `http://localhost:${config.get('PORT')}`,
         description: 'Development server',
       },
     ],

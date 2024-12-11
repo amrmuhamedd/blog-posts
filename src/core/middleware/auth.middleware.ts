@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAndDecodeToken } from "../utils/auth";
+import { Roles } from "../enums/roles";
 
 export const authMiddleware = (
   req: Request,
@@ -26,7 +27,7 @@ export const authMiddleware = (
       id: number;
       name: string;
       email: string;
-      role: "USER" | "ADMIN";
+      role: Roles;
     };
     req.user = tokenPayload;
     next();

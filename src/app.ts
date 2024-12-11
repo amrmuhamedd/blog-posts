@@ -21,7 +21,7 @@ class App {
 
   constructor() {
     this.app = express();
-    this.apiPrefix = config.get('API_PREFIX') || '/api';
+    this.apiPrefix = config.get('API_PREFIX');
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();

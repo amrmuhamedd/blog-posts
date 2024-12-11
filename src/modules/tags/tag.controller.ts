@@ -18,7 +18,7 @@ export class TagController {
   }
 
   async listTags(req: Request, res: Response) {
-    const { page, pageSize, search } = req.query;
+    const { page =1, pageSize = 10, search } = req.query;
     const result = await tagService.listTags({
       page: Number(page),
       pageSize: Number(pageSize),

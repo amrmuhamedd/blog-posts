@@ -1,3 +1,5 @@
+import { Roles } from "./core/enums/roles";
+
 declare global {
   namespace Express {
     interface Request {
@@ -5,7 +7,7 @@ declare global {
         id: number;
         name: string;
         email: string;
-        role: 'USER' | 'ADMIN';
+        role: Roles;
       };
     }
   }

@@ -22,7 +22,7 @@ import { Type } from 'class-transformer';
  *           minLength: 10
  *         status:
  *           type: string
- *           enum: [DRAFT, PUBLISHED, ARCHIVED]
+ *           enum: [Draft, Published, Scheduled]
  *         publish_at:
  *           type: string
  *           format: date-time
@@ -39,28 +39,32 @@ import { Type } from 'class-transformer';
 export class CreatePostDto {
   @IsString()
   @MinLength(5, { message: 'Title must be at least 5 characters' })
-  @MaxLength(100 , { message: 'Title must be between 5 and 100 characters' })
+  @MaxLength(100, { message: 'Title must be between 5 and 100 characters' })
   title: string;
 
   @IsString()
   @MinLength(10)
   content: string;
 
-  @IsEnum(PostStatus)
+  @IsEnum(PostStatus, { message: 'Status must be one of: Draft, Published, Scheduled' })
+  @Type(() => String)
   status: PostStatus;
 
   @IsOptional()
   @IsDate()
+  @Type(() => Date)
   publish_at?: Date;
 
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })
+  @Type(() => Number)
   categories?: number[];
 
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })
+  @Type(() => Number)
   tags?: number[];
 }
 

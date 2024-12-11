@@ -17,7 +17,7 @@ export class CategoryController {
   }
 
   async listCategories(req: Request, res: Response) {
-    const { page, pageSize, search } = req.query;
+    const { page = 1, pageSize = 10, search } = req.query;
     const result = await categoryService.listCategories({
       page: Number(page),
       pageSize: Number(pageSize),
@@ -34,7 +34,7 @@ export class CategoryController {
       throw new ValidationError('Validation failed', errors);
     }
 
-    const result = await categoryService.createCategory(categoryDto);
+    const result = await categoryService.createCategory(categoryDto, req.user.id);
     return res.status(201).json(result);
   }
 
@@ -46,12 +46,12 @@ export class CategoryController {
       throw new ValidationError('Validation failed', errors);
     }
 
-    const result = await categoryService.updateCategory(Number(req.params.id), categoryDto);
+    const result = await categoryService.updateCategory(Number(req.params.id), categoryDto, req.user.id);
     return res.status(200).json(result);
   }
 
   async deleteCategory(req: Request, res: Response) {
-    await categoryService.deleteCategory(Number(req.params.id));
+    await categoryService.deleteCategory(Number(req.params.id), req.user.id);
     return res.status(204).send();
   }
 
