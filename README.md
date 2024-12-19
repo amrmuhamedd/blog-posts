@@ -1,6 +1,7 @@
 # Blog Posts API
 
 A modern, feature-rich blogging platform API built with Node.js, Express, TypeScript, and PostgreSQL. This project follows clean architecture principles and provides a robust foundation for building scalable blog applications.
+![screencapture-localhost-3003-api-docs-2024-12-19-02_04_16](https://github.com/user-attachments/assets/ab3b1d7e-e3af-484a-8c15-aff92c3be5e3)
 
 ## Features
 
